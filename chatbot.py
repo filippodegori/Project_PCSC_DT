@@ -24,9 +24,6 @@ data = {
     },
 }
 
-base_url = 'https://europe-west1-degori-test2.cloudfunctions.net/save_data'
-
-
 def welcome(update, context):
     # messaggio di benvenuto
     msg = f'''Ciao {update.effective_user.first_name}, benvenuto in <b>DT-Chatbot</b>. Ecco l'elenco dei comandi:
