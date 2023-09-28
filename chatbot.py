@@ -24,6 +24,7 @@ data = {
     },
 }
 
+
 def welcome(update, context):
     # messaggio di benvenuto
     msg = f'''Ciao {update.effective_user.first_name}, benvenuto in <b>DT-Chatbot</b>. Ecco l'elenco dei comandi:
