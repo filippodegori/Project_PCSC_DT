@@ -2,6 +2,7 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler, \
     CallbackContext
 from secret import bot_token
+from datetime import datetime
 
 data = {
     "filippo": {
@@ -23,7 +24,6 @@ data = {
         "recording": False
     },
 }
-
 
 def welcome(update, context):
     # messaggio di benvenuto
@@ -88,6 +88,12 @@ def process_chat(update, context):
             if data[username]["recording"]:
                 data[username]["recording"] = False
                 update.message.reply_text(f"Fine della registrazione delle posizioni di {username}")
+                locations = data[username]["locations"]
+                if locations:
+                    for loc in locations:
+                        print(loc)
+                else:
+                    update.message.reply_text(f"Nessuna posizione registrata per {username}.")
             else:
                 update.message.reply_text(f"Non si può terminare la registrazione per {username}, poichè non è ancora "
                                           f"iniziata")
@@ -101,6 +107,18 @@ def process_chat(update, context):
         welcome(update, context)
 
 
+def get_location(update, context):
+    message = None
+    if update.edited_message:
+        message = update.edited_message
+    else:
+        message = update.message
+
+    username = context.user_data.get('username')
+    if username:
+        if data[username]["recording"]:
+            data[username]["locations"].append((message.location, datetime.now()))
+
 def main():
     print('bot started')
     upd = Updater(bot_token, use_context=True)
@@ -108,6 +126,7 @@ def main():
 
     disp.add_handler(CommandHandler("start", callback=welcome))
     disp.add_handler(MessageHandler(Filters.regex('^.*$'), callback=process_chat))
+    disp.add_handler(MessageHandler(Filters.location, callback=get_location))
 
     upd.start_polling()
     upd.idle()
