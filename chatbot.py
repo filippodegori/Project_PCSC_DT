@@ -26,8 +26,6 @@ data = {
     },
 }
 
-
-
 base_url = 'https://europe-west1-project-pcsc-dt.cloudfunctions.net/save_data_to_bigquery'
 
 
