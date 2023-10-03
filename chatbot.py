@@ -104,7 +104,8 @@ def process_chat(update, context):
                     # print(route)
                     # print(start_loc)
                     # print(end_loc)
-                    r = post(f'{base_url}', json={'username': username, 'route': route, 'start_loc': start_loc, 'end_loc': end_loc})
+                    r = post(f'{base_url}',
+                             json={'username': username, 'route': route, 'start_loc': start_loc, 'end_loc': end_loc})
                     print(r.text)
                 else:
                     update.message.reply_text(f"Nessuna posizione registrata per {username}.")
@@ -132,6 +133,7 @@ def get_location(update, context):
     if username:
         if data[username]["recording"]:
             data[username]["locations"].append((message.location, datetime.now()))
+
 
 def main():
     print('bot started')
