@@ -2,6 +2,8 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler, \
     CallbackContext
 from secret import bot_token
+from datetime import datetime
+from requests import get, post
 
 data = {
     "filippo": {
@@ -23,6 +25,8 @@ data = {
         "recording": False
     },
 }
+
+base_url = 'https://europe-west1-project-pcsc-dt.cloudfunctions.net/save_data_to_bigquery'
 
 
 def welcome(update, context):
@@ -88,6 +92,22 @@ def process_chat(update, context):
             if data[username]["recording"]:
                 data[username]["recording"] = False
                 update.message.reply_text(f"Fine della registrazione delle posizioni di {username}")
+                start_loc = data[username]["locations"][0][1].strftime('%Y-%m-%d %H:%M:%S')
+                end_loc = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                locations = data[username]["locations"]
+                if locations:
+                    route = 'LINESTRING('
+                    for loc in locations:
+                        route = route + f'{loc[0].longitude} {loc[0].latitude}, '
+                    route = route + ')'
+                    route = route.replace(', )', ')')
+                    # print(route)
+                    # print(start_loc)
+                    # print(end_loc)
+                    r = post(f'{base_url}', json={'username': username, 'route': route, 'start_loc': start_loc, 'end_loc': end_loc})
+                    print(r.text)
+                else:
+                    update.message.reply_text(f"Nessuna posizione registrata per {username}.")
             else:
                 update.message.reply_text(f"Non si può terminare la registrazione per {username}, poichè non è ancora "
                                           f"iniziata")
@@ -101,6 +121,18 @@ def process_chat(update, context):
         welcome(update, context)
 
 
+def get_location(update, context):
+    message = None
+    if update.edited_message:
+        message = update.edited_message
+    else:
+        message = update.message
+
+    username = context.user_data.get('username')
+    if username:
+        if data[username]["recording"]:
+            data[username]["locations"].append((message.location, datetime.now()))
+
 def main():
     print('bot started')
     upd = Updater(bot_token, use_context=True)
@@ -108,6 +140,7 @@ def main():
 
     disp.add_handler(CommandHandler("start", callback=welcome))
     disp.add_handler(MessageHandler(Filters.regex('^.*$'), callback=process_chat))
+    disp.add_handler(MessageHandler(Filters.location, callback=get_location))
 
     upd.start_polling()
     upd.idle()
